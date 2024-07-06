@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security System Control</title>
+    <link rel="stylesheet" href="styles.css">
+<script>navigator.serviceWorker.register("service-worker.js")</script>  
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <h1>Security System Control</h1>
+    <div class="buttons">
+        <button id="openDoor">Open Door</button>
+        <button id="closeDoor">Close Door</button>
+        <button id="enableAlarm">Enable Alarm</button>
+        <button id="disableAlarm">Disable Alarm</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <script >
+const MQTT_BROKER = "broker.mqttdashboard.com";
+const MQTT_PORT = 8000;
+const MQTT_CLIENT_ID = "pwa-security-system";
+
+const client = new Paho.MQTT.Client(MQTT_BROKER, MQTT_PORT, MQTT_CLIENT_ID);
+
+client.onConnectionLost = onConnectionLost;
+client.onMessageArrived = onMessageArrived;
+
+function onConnect() {
+    console.log("Connected to MQTT broker");
+}
+
+function onConnectionLost(responseObject) {
+    if (responseObject.errorCode !== 0) {
+        console.log("onConnectionLost:", responseObject.errorMessage);
+    }
+}
+
+function onMessageArrived(message) {
+    console.log("Message Arrived:", message.payloadString);
+}
+
+function sendMessage(command) {
+    const message = new Paho.MQTT.Message(JSON.stringify({ command }));
+    message.destinationName = "home/security/command";
+    client.send(message);
+}
+
+client.connect({ onSuccess: onConnect });
+
+document.getElementById('openDoor').addEventListener('click', () => sendMessage('open_door'));
+document.getElementById('closeDoor').addEventListener('click', () => sendMessage('close_door'));
+document.getElementById('enableAlarm').addEventListener('click', () => sendMessage('enable_alarm'));
+document.getElementById('disableAlarm').addEventListener('click', () => sendMessage('disable_alarm'));
+
+    </script>
+</body>
+</html>
